@@ -12,6 +12,9 @@ login(token=os.getenv("HF_TOKEN"))
 '''
 
 
+class LLM(ABC):
+
+
 class GenerationModel:
     def __init__(self, model_id, temperature=0.0, max_new_tokens=356, do_sample=False, top_k=50, top_p=0.7):
         self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto", load_in_4bit=True)
