@@ -8,7 +8,8 @@ model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.1", device
 
 print(device)
 
-prompt = "The following string is a molecule in the SMILES format, explain it to me: CCCS(=O)c1ccc2[nH]c(=NC(=O)OC)[nH]c2c1"
+prompt = """Given the following reactants and reagents, please provide a possible product. Answer only a SMILES string. 
+          CCN(CC)CC.CCN=C=NCCCN(C)C.CN(C)C=O.Cl.NC1=CC=C(Cl)C=C1N.O.O=C(O)CCCCCNC(=O)C=C1C2=CC=CC=C2C2=CC=CC=C12.OC1=CC=CC2=C1N=NN2.[Cl-].[Na+]"""
 
 inputs = tokenizer(prompt, return_tensors="pt").to(device)
 model = model.to(device)

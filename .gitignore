@@ -1,6 +1,6 @@
 # ignore all . files and . folders
 .*
-
+moses
 a.env
 # Dont ignore .gitignore (this file)
 # This is just for verbosity, you can leave it out if

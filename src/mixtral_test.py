@@ -50,9 +50,10 @@ if __name__ == "__main__":
     model = GenerationModel(
         model_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
         temperature=0.0,
-        max_new_tokens=356,
+        #max_new_tokens=356,
         do_sample=False,
     )
-    messages = "Explain what a Mixture of Experts is in less than 100 words."
-    out = model(messages)
+    prompt = """Given the following reactants and reagents, please provide a possible product. 
+          CCN(CC)CC.CCN=C=NCCCN(C)C.CN(C)C=O.Cl.NC1=CC=C(Cl)C=C1N.O.O=C(O)CCCCCNC(=O)C=C1C2=CC=CC=C2C2=CC=CC=C12.OC1=CC=CC2=C1N=NN2.[Cl-].[Na+]"""
+    out = model(prompt)
     print(out)
