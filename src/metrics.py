@@ -57,6 +57,27 @@ def compare_properties(dataset_properties, generated_properties):
         comparison_results[property] = {'t_stat': t_stat, 'p_value': p_value}
     return comparison_results
 
+def evaluate(generated_smiles_list, smiles_list = None):
+    """Calculate metrics."""
+    
+    # Validate molecules
+    validity, valid_generated_smiles = calculate_validity(generated_smiles_list)
+    
+    uniqueness = None
+    drug_likeness = None
+    novelty= None
+    
+    # Calculate metrics
+    if len(valid_generated_smiles) > 0:
+        uniqueness = calculate_uniqueness(valid_generated_smiles)
+        drug_likeness = calculate_drug_likeness(valid_generated_smiles)
+        #check if baseline has been given
+        if smiles_list != None:
+            novelty = calculate_novelty(valid_generated_smiles, smiles_list)
+    else: print("Not a single valid molecule generated!!")
+    
+    return validity, novelty, uniqueness, drug_likeness
+
 def main():
     # Example data
     dataset_smiles = ['CCO', 'CCN', 'CCC']  # Replace with actual dataset SMILES
