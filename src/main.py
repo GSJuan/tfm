@@ -1,6 +1,6 @@
 from readers import MosesReader
 from models import Nach0GenerationModel, MixtralGenerationModel
-from validate import validate_single_smiles
+from metrics import is_valid_smiles
 
 
 moses_smiles = MosesReader()
@@ -24,4 +24,6 @@ answer = model(prompt)
 
 print("Clean output: " + answer)
 
-validate_single_smiles(answer)
+if is_valid_smiles(answer)is not None:
+    print("Valid SMILES, both chemicallly and sintactically")
+else: print("Invalid Smiles")
