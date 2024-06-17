@@ -32,12 +32,12 @@ class MistralGenerationModel(BaseGenerationModel):
     def generate_text(self, prompt):
         try:
             messages = [{"role": "user", "content": prompt}]
-            full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False)
+            full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             
             inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
             with torch.no_grad():
                 outputs   = self.model.generate(**inputs, max_new_tokens = self.max_new_tokens, do_sample=self.do_sample)
-            return self.tokenizer.decode(outputs[0], skip_special_tokens=True, use_cache=True)
+            return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         except Exception as e:
             print(e)
             

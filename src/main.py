@@ -9,7 +9,8 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-
+import torch
+import os
 
 # Define configurations for each dataset
 datasets = {
@@ -133,12 +134,12 @@ for dataset_name, dataset in datasets.items():
                         log_results(results, dataset_name, model_name, strategy, prompt_template, num_generations, validity, novelty, uniqueness, drug_likeness, sample_size)
         del model
         torch.cuda.empty_cache()
-"""
+
 # Save results to CSV with a timestamped filename
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
 output_file = f"molecule_generation_results_{timestamp}.csv"
 df = pd.DataFrame(results)
 df.to_csv(output_file, index=False)
 
 print(f"Results saved to {output_file}")
-"""

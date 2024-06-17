@@ -1,0 +1,91 @@
+dataset,model,prompting_strategy,prompt_template,num_generations,validity,novelty,uniqueness,drug_likeness,sample_size
+Moses,mistral,zero_shot,"Create a new, never seen drug-like molecule and provide its SMILES string. Dont respond with anything apart from the SMILES string that encodes the molecule:",3,0.0,,,,
+Moses,mistral,zero_shot,Generate a novel molecule in SMILES format. Answer only the SMILES string: ,3,0.0,,,,
+Moses,mistral,one_shot,Generate a similar molecule in SMILES format similar to this one: [example_SMILES],3,0.0,,,,
+Moses,mistral,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,0.0,,,,3.0
+Moses,mistral,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,0.0,,,,5.0
+Moses,mistral,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,0.0,,,,10.0
+Moses,mistral,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,3.0
+Moses,mistral,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,5.0
+Moses,mistral,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,10.0
+Moses,mixtral,zero_shot,"Create a new, never seen drug-like molecule and provide its SMILES string. Dont respond with anything apart from the SMILES string that encodes the molecule:",3,0.0,,,,
+Moses,mixtral,zero_shot,Generate a novel molecule in SMILES format. Answer only the SMILES string: ,3,0.0,,,,
+Moses,mixtral,one_shot,Generate a similar molecule in SMILES format similar to this one: [example_SMILES],3,0.0,,,,
+Moses,mixtral,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,0.0,,,,3.0
+Moses,mixtral,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,0.0,,,,5.0
+Moses,mixtral,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,0.0,,,,10.0
+Moses,mixtral,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,3.0
+Moses,mixtral,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,5.0
+Moses,mixtral,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,10.0
+Moses,nach0,zero_shot,"Create a new, never seen drug-like molecule and provide its SMILES string. Dont respond with anything apart from the SMILES string that encodes the molecule:",3,1.0,,1.0,0.35810521065871165,
+Moses,nach0,zero_shot,Generate a novel molecule in SMILES format. Answer only the SMILES string: ,3,1.0,,1.0,0.8109084959839148,
+Moses,nach0,one_shot,Generate a similar molecule in SMILES format similar to this one: [example_SMILES],3,0.3333333333333333,1.0,1.0,0.8008945267477434,
+Moses,nach0,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,0.3333333333333333,1.0,1.0,0.21608517884860357,3.0
+Moses,nach0,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,1.0,1.0,1.0,0.5552647045303888,5.0
+Moses,nach0,few_shot,"Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a 
+ character. 
+
+MOLECULES:
+[example_SMILES]
+
+
+ANSWER:",3,0.3333333333333333,1.0,1.0,0.432954758096447,10.0
+Moses,nach0,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,3.0
+Moses,nach0,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,5.0
+Moses,nach0,few_shot,Here are some SMILES strings of molecules: [example_SMILES]. Generate a similar molecule: ,3,0.0,,,,10.0
