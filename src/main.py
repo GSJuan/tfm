@@ -83,13 +83,14 @@ for dataset_name, dataset in datasets.items():
         
         for strategy, prompt_templates in prompting_strategies.items():
             if strategy == "zero_shot":
+                input_samples = ""
                 for prompt in prompt_templates:
                     generated_smiles_list = []
                     for _ in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy})"):
                         generated_smiles = model.generate_text(prompt)
                         generated_smiles_list.append(generated_smiles)
                     validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list)
-                    log_results(results, dataset_name, model_name, strategy, prompt, num_generations, validity, novelty, uniqueness, drug_likeness)
+                    log_results(results, dataset_name, model_name, strategy, prompt, num_generations, input_samples, generated_smiles_list, validity, novelty, uniqueness, drug_likeness)
             
             elif strategy == "one_shot":
                 for prompt_template in prompt_templates:
@@ -97,22 +98,15 @@ for dataset_name, dataset in datasets.items():
                     sampled_smiles_list = []
                     for _ in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy})"):
                         smile = choice(smiles_list)
-                        print(smile)
                         sampled_smiles_list.append(smile)
                         
                         prompt = prompt_template.replace("[example_SMILES]", smile)
                         
-                        print(prompt)
-                        
                         generated_smiles = model.generate_text(prompt)
                         generated_smiles_list.append(generated_smiles)
                         
-                        print(generated_smiles)
-                        
-                    print(sampled_smiles_list)
-                    print(generated_smiles_list)
                     validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, sampled_smiles_list)
-                    log_results(results, dataset_name, model_name, strategy, prompt_template, num_generations, validity, novelty, uniqueness, drug_likeness)
+                    log_results(results, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness)
                     
             elif strategy == "few_shot":
                 for prompt_template in prompt_templates:
@@ -131,7 +125,7 @@ for dataset_name, dataset in datasets.items():
                             generated_smiles_list.append(generated_smiles)
                             
                         validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, subset_smiles)
-                        log_results(results, dataset_name, model_name, strategy, prompt_template, num_generations, validity, novelty, uniqueness, drug_likeness, sample_size)
+                        log_results(results, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness, sample_size)
         del model
         torch.cuda.empty_cache()
 

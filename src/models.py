@@ -31,7 +31,11 @@ class MistralGenerationModel(BaseGenerationModel):
         
     def generate_text(self, prompt):
         try:
-            messages = [{"role": "user", "content": prompt}]
+            messages = [
+                {
+                    "role": "user", 
+                    "content": "You are a helpful chemical assistant. Yor task is to generate a valid SMILES string that represents a molecule based on the given information. Don't give any additional explanations when answering, just the plain SMILES string. \n" + prompt}
+            ]
             full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             
             inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
@@ -49,7 +53,11 @@ class MixtralGenerationModel(BaseGenerationModel):
 
     def generate_text(self, prompt):
         try:
-            messages = [{"role": "user", "content": prompt}]
+            messages = [
+                {
+                    "role": "user", 
+                    "content": "You are a helpful chemical assistant. Yor task is to generate a valid SMILES string that represents a molecule based on the given information. Don't give any additional explanations when answering, just the plain SMILES string. \n" + prompt}
+            ]
             full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
             with torch.no_grad():
