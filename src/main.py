@@ -25,15 +25,15 @@ datasets = {
         "reader": SMILESReader,
         "source": "/home/jovyan/tfm/data/guacamol_v1_all.smiles",
         "config": {}
-    }
+    },
     "ZINC": {
         "reader": CSVReader,
-        "source": "/home/jovyan/tfm/data/350k_rndm_zinc_drugs_clean_3.csv",
+        "source": "/home/jovyan/tfm/data/250k_rndm_zinc_drugs_clean_3.csv",
         "config": {"smiles_column": "smiles"}
     },
     "GDB13_Random": {
         "reader": SMIReader,
-        "source": "/home/jovyan/tfm/data/gdb1.1M.freq.ll.smi",
+        "source": "/home/jovyan/tfm/data/gdb13.1M.freq.ll.smi",
         "config": {"smiles_column": "0"}
     }
 }

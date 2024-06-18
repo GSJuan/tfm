@@ -28,11 +28,11 @@ class SMIReader(BaseReader):
     
     def extract_smiles(self):
         try:
-            with open(file_name, "r") as ins:
+            with open(self.source, "r") as ins:
                 smiles = []
-                for line in ins:
-                    smiles.append(line.split('\n')[0])
-                    print('# of SMILES:', len(smiles))            
+                for line in ins: 
+                    smiles.append(line.split()[0])
+                return smiles
             
         except Exception as e:
             print(e)
@@ -66,8 +66,8 @@ class CSVReader(BaseReader):
         pass
 
     def extract_smiles(self):
-        if self.split_column != None
-        data = pd.read_csv(self.source, usecols=[self.smiles_column, self.split_column])
+        if self.split_column != None:
+            data = pd.read_csv(self.source, usecols=[self.smiles_column, self.split_column])
             if self.split_value != 'both':
                 data = data[data[self.split_column] == self.split_value]
                 
@@ -96,22 +96,22 @@ def main():
             "reader": CSVReader,
             "source": "https://media.githubusercontent.com/media/molecularsets/moses/master/data/dataset_v1.csv",
             "config": {"smiles_column": "SMILES",
-                       "split_column": "split",
+                       "split_column": "SPLIT",
                        "split_value": "both"}
         },
         "Guacamole": {
             "reader": SMILESReader,
             "source": "/home/jovyan/tfm/data/guacamol_v1_all.smiles",
             "config": {}
-        }
+        },
         "ZINC": {
             "reader": CSVReader,
-            "source": "/home/jovyan/tfm/data/350k_rndm_zinc_drugs_clean_3.csv",
+            "source": "/home/jovyan/tfm/data/250k_rndm_zinc_drugs_clean_3.csv",
             "config": {"smiles_column": "smiles"}
         },
         "GDB13_Random": {
             "reader": SMIReader,
-            "source": "/home/jovyan/tfm/data/gdb1.1M.freq.ll.smi",
+            "source": "/home/jovyan/tfm/data/gdb13.1M.freq.ll.smi",
             "config": {"smiles_column": "0"}
         }
     }
@@ -123,7 +123,7 @@ def main():
         config = dataset["config"]
         reader = reader_class(source, config)
         smiles = reader.extract_smiles()
-        all_smiles[name+"_"+config["split_value"]] = smiles
+        all_smiles[name] = smiles
 
 # Example processing of the extracted SMILES strings
     for dataset_name, smiles_list in all_smiles.items():
