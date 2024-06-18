@@ -25,7 +25,7 @@ class BaseGenerationModel:
             
 class MistralGenerationModel(BaseGenerationModel):
    
-    def __init__(self, model_id, temperature=1, max_new_tokens=1000, do_sample=True, top_k=50, top_p=0.7):
+    def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=50, top_p=0.7):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
         self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
         
@@ -37,17 +37,18 @@ class MistralGenerationModel(BaseGenerationModel):
                     "content": "You are a helpful chemical assistant. Yor task is to generate a valid SMILES string that represents a molecule based on the given information. Don't give any additional explanations when answering, just the plain SMILES string. \n" + prompt}
             ]
             full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-            
+                        
             inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
             with torch.no_grad():
-                outputs   = self.model.generate(**inputs, max_new_tokens = self.max_new_tokens, do_sample=self.do_sample)
-            return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+                outputs   = self.model.generate(**inputs, max_new_tokens = self.max_new_tokens, do_sample=self.do_sample, use_cache=True)
+            generated_text = self.tokenizer.decode(outputs[0][len(inputs["input_ids"][0]):], skip_special_tokens=True)
+            return generated_text.splitlines()[0]
         except Exception as e:
             print(e)
             
             
 class MixtralGenerationModel(BaseGenerationModel):
-    def __init__(self, model_id, temperature=1, max_new_tokens=1000, do_sample=True, top_k=50, top_p=0.7):
+    def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=50, top_p=0.7):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
         self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto", load_in_4bit=True)
 
@@ -61,15 +62,15 @@ class MixtralGenerationModel(BaseGenerationModel):
             full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
             with torch.no_grad():
-                outputs = self.model.generate(**inputs, max_new_tokens=self.max_new_tokens, use_cache=True)
-            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-            return generated_text
+                outputs = self.model.generate(**inputs, max_new_tokens=self.max_new_tokens, do_sample=self.do_sample, use_cache=True)
+            #generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            generated_text = self.tokenizer.decode(outputs[0][len(inputs["input_ids"][0]):], skip_special_tokens=True)
+            return generated_text.splitlines()[0]
         except Exception as e:
             print(e)
 
 class Nach0GenerationModel(BaseGenerationModel):
-    def __init__(self, model_id, temperature=1, max_new_tokens=512, do_sample=True, top_k=100, top_p=0.95):
+    def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=100, top_p=0.95):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_id, device_map="auto")
         self.atoms_tokens = sorted(['Ag','Al','As','Au','B','Ba','Bi','Br','C','Ca',

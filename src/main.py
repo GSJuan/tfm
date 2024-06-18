@@ -1,6 +1,6 @@
 from models import Nach0GenerationModel, MixtralGenerationModel, MistralGenerationModel
 from metrics import is_valid_smiles, evaluate
-from readers import CSVReader, JSONReader
+from readers import CSVReader, JSONReader, SMILESReader, SMIReader
 from utils import log_results 
 from random import sample, choice
 from tqdm import tqdm
@@ -20,6 +20,21 @@ datasets = {
         "config": {"smiles_column": "SMILES",
                    "split_column": "SPLIT",
                    "split_value": "both"}
+    },
+    "Guacamole": {
+        "reader": SMILESReader,
+        "source": "/home/jovyan/tfm/data/guacamol_v1_all.smiles",
+        "config": {}
+    }
+    "ZINC": {
+        "reader": CSVReader,
+        "source": "/home/jovyan/tfm/data/350k_rndm_zinc_drugs_clean_3.csv",
+        "config": {"smiles_column": "smiles"}
+    },
+    "GDB13_Random": {
+        "reader": SMIReader,
+        "source": "/home/jovyan/tfm/data/gdb1.1M.freq.ll.smi",
+        "config": {"smiles_column": "0"}
     }
 }
 
@@ -45,10 +60,11 @@ prompting_strategies = {
         "Generate a novel molecule in SMILES format. Answer only the SMILES string: ",
     ],
     "one_shot": [
-        "Generate a similar molecule in SMILES format similar to this one: [example_SMILES]",
+        "Generate a molecule in SMILES format similar to this one: [example_SMILES]",
+        "",
     ],
     "few_shot": [
-        """Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES strings separated by a \n character. 
+        """Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES string. 
 
 MOLECULES:
 [example_SMILES]
@@ -62,12 +78,15 @@ ANSWER:""",
 # Define few-shot sample sizes
 few_shot_sample_sizes = [3, 5, 10]
 
-# Define number of SMILES to be generated for each prompt
+# Define number of SMILES to be generated for each prompt by each model
 num_generations = 3
 
-# Main loop to process datasets, models, and prompting strategies
-results = []
 
+# Save results to CSV with a timestamped filename
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+output_file = f"molecule_generation_results_{timestamp}.csv"
+
+# Main loop to process datasets, models, and prompting strategies
 for dataset_name, dataset in datasets.items():
     reader_class = dataset["reader"]
     source = dataset["source"]
@@ -90,7 +109,7 @@ for dataset_name, dataset in datasets.items():
                         generated_smiles = model.generate_text(prompt)
                         generated_smiles_list.append(generated_smiles)
                     validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list)
-                    log_results(results, dataset_name, model_name, strategy, prompt, num_generations, input_samples, generated_smiles_list, validity, novelty, uniqueness, drug_likeness)
+                    log_results(output_file, dataset_name, model_name, strategy, prompt, num_generations, input_samples, generated_smiles_list, validity, novelty, uniqueness, drug_likeness)
             
             elif strategy == "one_shot":
                 for prompt_template in prompt_templates:
@@ -106,7 +125,7 @@ for dataset_name, dataset in datasets.items():
                         generated_smiles_list.append(generated_smiles)
                         
                     validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, sampled_smiles_list)
-                    log_results(results, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness)
+                    log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness)
                     
             elif strategy == "few_shot":
                 for prompt_template in prompt_templates:
@@ -119,21 +138,15 @@ for dataset_name, dataset in datasets.items():
                             sampled_smiles_list.extend(subset_smiles)
                             
                             example_smiles = "\n".join(subset_smiles)
+                    
                             prompt = prompt_template.replace("[example_SMILES]", example_smiles)
-                            
+                        
                             generated_smiles = model.generate_text(prompt)
                             generated_smiles_list.append(generated_smiles)
                             
                         validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, subset_smiles)
-                        log_results(results, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness, sample_size)
+                        log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness, sample_size)
         del model
         torch.cuda.empty_cache()
-
-# Save results to CSV with a timestamped filename
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-output_file = f"molecule_generation_results_{timestamp}.csv"
-df = pd.DataFrame(results)
-df.to_csv(output_file, index=False)
 
 print(f"Results saved to {output_file}")
