@@ -27,6 +27,7 @@ class MistralGenerationModel(BaseGenerationModel):
    
     def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=50, top_p=0.7):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
+        
         self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
         
     def generate_text(self, prompt):

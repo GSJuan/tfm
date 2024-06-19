@@ -1,3 +1,6 @@
+import pandas as pd
+import os
+
 def log_results(file, dataset_name, model_name, strategy, prompt_template, num_generations, input_samples, generated_response, validity, novelty, uniqueness, drug_likeness, sample_size=None):
     """Log the results."""
     result = {
@@ -17,4 +20,4 @@ def log_results(file, dataset_name, model_name, strategy, prompt_template, num_g
         result["sample_size"] = sample_size
         
     df = pd.DataFrame([result])
-    df.to_csv(file, mode='a', header=file.tell() == 0, index=False)
+    df.to_csv(file, mode='a', header=not os.path.exists(file), index=False)

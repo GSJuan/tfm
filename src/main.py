@@ -1,4 +1,5 @@
 from models import Nach0GenerationModel, MixtralGenerationModel, MistralGenerationModel
+from gc_models import MistralConstrainedModel
 from metrics import is_valid_smiles, evaluate
 from readers import CSVReader, JSONReader, SMILESReader, SMIReader
 from utils import log_results 
@@ -38,6 +39,7 @@ datasets = {
     }
 }
 
+
 models = {
     "mistral": {
         "class": MistralGenerationModel,
@@ -53,6 +55,15 @@ models = {
     }
 }
 
+"""
+models = {
+    "ConstrainedMistral": {
+       "class": MistralConstrainednModel,
+        "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
+    },
+}
+"""
+
 # Define prompting strategies
 prompting_strategies = {
     "zero_shot": [
@@ -64,7 +75,7 @@ prompting_strategies = {
         "",
     ],
     "few_shot": [
-        """Here you have a set of  dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES string. 
+        """Here you have a sample of dataset, which contains SMILES strings that describe molecules. The task you have to accomplish is generate a novel molecule based on the inputs as possible. Answer only the SMILES string. 
 
 MOLECULES:
 [example_SMILES]
@@ -84,21 +95,22 @@ num_generations = 3
 
 # Save results to CSV with a timestamped filename
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-output_file = f"molecule_generation_results_{timestamp}.csv"
+output_file = f"constrained_molecule_generation_results_{timestamp}.csv"
 
 # Main loop to process datasets, models, and prompting strategies
-for dataset_name, dataset in datasets.items():
-    reader_class = dataset["reader"]
-    source = dataset["source"]
-    config = dataset["config"]
+for model_name, model_config in models.items():
+
+    model_class = model_config["class"]
+    model_id = model_config["model_id"]
+    model = model_class(model_id)
     
-    reader = reader_class(source, config)
-    smiles_list = reader.extract_smiles()
-    for model_name, model_config in models.items():
-        
-        model_class = model_config["class"]
-        model_id = model_config["model_id"]
-        model = model_class(model_id)
+    for dataset_name, dataset in datasets.items():
+        reader_class = dataset["reader"]
+        source = dataset["source"]
+        config = dataset["config"]
+
+        reader = reader_class(source, config)
+        smiles_list = reader.extract_smiles()
         
         for strategy, prompt_templates in prompting_strategies.items():
             if strategy == "zero_shot":
@@ -146,7 +158,7 @@ for dataset_name, dataset in datasets.items():
                             
                         validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, subset_smiles)
                         log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness, sample_size)
-        del model
-        torch.cuda.empty_cache()
+    del model
+    torch.cuda.empty_cache()
 
 print(f"Results saved to {output_file}")
