@@ -1,5 +1,9 @@
 import pandas as pd
 import os
+from pathlib import Path
+
+def get_project_root() -> Path:
+    return Path(__file__).parent.parent
 
 def log_results(file, dataset_name, model_name, strategy, prompt_template, num_generations, input_samples, generated_response, validity, novelty, uniqueness, drug_likeness, sample_size=None):
     """Log the results."""
