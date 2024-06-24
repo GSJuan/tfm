@@ -103,19 +103,21 @@ class MistralCFGModel(BaseCFGModel):
                 skip_special_tokens=True,
             )
             
-            generated_text = ""
-            for generation, gen_type in zip(generations, ["Unconstrained:", "Constrained:"]):
-                print(gen_type)
+            responses = {}
+            for generation, gen_type in zip(generations, ["Unconstrained", "Constrained"]):
+                print(gen_type + ":")
                 print(generation)
+                
+                responses[gen_type] = generation[len(full_prompt):]
+                
                 assert string_grammar._accept_prefix(
                     res[len(full_prompt):]
                 ), f"The generated prefix does not match the grammar: {string_grammar._accept_prefix(res[len(full_prompt):])}"
                 print(
                     f"The generation matches the grammar: {string_grammar._accept_string(generation[len(full_prompt):])}"
                 )
-                if gen_type == "Constrained:": generated_text = generation[len(full_prompt):]
-            
-            return generated_text
+
+            return responses
         except Exception as e:
             print(e)
             
@@ -130,5 +132,5 @@ if __name__ == "__main__":
     messages = "Generate a simple smiles molecule:"
     out = model.generate_text(messages)
     print(out)
-    print("Is valid?: ") 
-    print(is_valid_smiles(out))
+    print("Is constrained valid?: ") 
+    print(is_valid_smiles(out["Constrained"]))

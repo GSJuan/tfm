@@ -2,11 +2,40 @@ from rdkit import Chem
 from rdkit.Chem import Descriptors, QED
 import pandas as pd
 from scipy.stats import ttest_ind
+from io import StringIO
+import sys
+from rdkit.rdBase import WrapLogs
+WrapLogs() #https://www.rdkit.org/docs/source/rdkit.rdBase.html
 
 def is_valid_smiles(smiles):
-    """Check if a SMILES string is valid."""
+    """Check if a SMILES string is valid.
     mol = Chem.MolFromSmiles(smiles)
     return mol is not None
+    """
+    
+    validity = {
+        "syntactic": False,
+        "semantic": False,
+        "error": ""
+    }
+    smiles="N=N=N"
+    sio = sys.stderr = StringIO()
+    m = Chem.MolFromSmiles(smiles,sanitize=False) #https://www.rdkit.org/docs/source/rdkit.Chem.rdmolfiles.html
+    if m is None:
+        validity["error"] = sio.getvalue()
+        return validity
+    
+    validity["syntactic"] = True
+    print("hi!")
+    try:
+        Chem.SanitizeMol(m, catchErrors=False)  #https://www.rdkit.org/docs/source/rdkit.Chem.rdmolops.html#rdkit.Chem.rdmolops.SanitizeMol
+    except Exception as e:
+        validity["error"] = e
+        return validity
+    
+    validity["semantic"] = True
+    return validity
+
 
 def calculate_properties(smiles):
     """Calculate chemical properties of a molecule given its SMILES string."""
