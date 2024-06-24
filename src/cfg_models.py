@@ -1,5 +1,4 @@
 import torch
-import argparse
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.recognizer import StringRecognizer
@@ -38,6 +37,9 @@ class MistralCFGModel(BaseCFGModel):
     def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=50, top_p=0.7, repetition_penalty=1.9, num_return_sequences=1):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p, repetition_penalty=1.9, num_return_sequences=1)
         
+        self.model_type = "base"
+        if model_id.find("Instruct") == -1:
+            self.model_type = "instruct"  
         
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
@@ -56,18 +58,52 @@ class MistralCFGModel(BaseCFGModel):
 
         grammar = IncrementalGrammarConstraint(grammar_str, "root", self.tokenizer)
         self.grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
-        
+
     def generate_text(self, prompt):
-        try:
+        try: 
+            full_prompt = prompt
+            if self.model_type == "instruct":
+                messages = [
+                    {
+                        "role": "user", 
+                        "content": "You are a helpful chemical assistant that only answers a valid SMILES string that represents a molecule based on the given information, if any is given.\n" + prompt}
+                ]
+                full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             
-            messages = [
-                {
-                    "role": "user", 
-                    "content": "You are a helpful chemical assistant that only answers a valid SMILES string that represents a molecule based on the given information, if any is given.\n" + prompt
-                }
-            ]
+            input_ids = self.tokenizer([full_prompt], add_special_tokens=False, return_tensors="pt", padding=True).to(self.model.device)
             
-            full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            with torch.no_grad():
+                constrained_output = self.model.generate(
+                    **input_ids, 
+                    max_new_tokens = self.max_new_tokens,
+                    do_sample=False,
+                    logits_processor=[self.grammar_processor],
+                    repetition_penalty=self.repetition_penalty,
+                    num_return_sequences=self.num_return_sequences)
+            
+            string_grammar = StringRecognizer(self.parsed_grammar.grammar_encoding, self.parsed_grammar.symbol_table["root"])
+            prompt_length = len(self.tokenizer.decode(input_ids['input_ids'][0], skip_special_tokens=True))
+
+            
+            res = self.tokenizer.decode(
+                constrained_output[0],
+                skip_special_tokens=True,
+            )
+
+            return res[prompt_length:]
+        except Exception as e:
+            print(e)
+ 
+    def debug_generate_text(self, prompt):
+        try: 
+            full_prompt = prompt
+            if self.model_type == "instruct":
+                messages = [
+                    {
+                        "role": "user", 
+                        "content": "You are a helpful chemical assistant that only answers a valid SMILES string that represents a molecule based on the given information, if any is given.\n" + prompt}
+                ]
+                full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             
             input_ids = self.tokenizer([full_prompt], add_special_tokens=False, return_tensors="pt", padding=True).to(self.model.device)
             
@@ -122,14 +158,15 @@ class MistralCFGModel(BaseCFGModel):
             
 if __name__ == "__main__":
     model = MistralCFGModel(
+        #model_id="mistralai/Mistral-7B-v0.1", 
         model_id="mistralai/Mistral-7B-Instruct-v0.2", 
         do_sample=False,
         max_new_tokens=20,
         repetition_penalty=1.9,
         num_return_sequences=1
     )
-    messages = "Generate a simple smiles molecule:"
+    messages = "Generate a simple molecule in SMILES format:"
     out = model.generate_text(messages)
     print(out)
     print("Is constrained valid?: ") 
-    print(is_valid_smiles(out["Constrained"]))
+    print(is_valid_smiles(out))

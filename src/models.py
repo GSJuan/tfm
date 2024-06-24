@@ -1,7 +1,18 @@
-from transformers import AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoTokenizer
-import torch
 import re
+import time
+import torch
 from rdkit import Chem
+
+from transformers import AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoTokenizer
+
+from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
+from transformers_cfg.recognizer import StringRecognizer
+from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
+from transformers_cfg.parser import parse_ebnf
+
+from metrics import is_valid_smiles
+from utils import get_project_root
+
 
 class BaseGenerationModel:
     
@@ -23,7 +34,7 @@ class BaseGenerationModel:
         raise NotImplementedError("Subclasses should implement this method")
 
             
-class MistralInstructGenerationModel(BaseGenerationModel):
+class MistralGenerationModel(BaseGenerationModel):
    
     def __init__(self, model_id, load_in_4bit=False, max_new_tokens=1024, do_sample=True, temperature=1, top_k=50, top_p=0.7):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
@@ -36,9 +47,8 @@ class MistralInstructGenerationModel(BaseGenerationModel):
         
     def generate_text(self, prompt):
         try:
-            
             full_prompt = prompt
-            if self.model_type == "instruct".
+            if self.model_type == "instruct":
                 messages = [
                     {
                         "role": "user", 

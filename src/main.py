@@ -1,5 +1,6 @@
-from models import Nach0GenerationModel, MistralInstructGenerationModel
+from models import Nach0GenerationModel, MistralGenerationModel
 from gc_models import MistralConstrainedModel
+from cfg_models import MistralCFGModel
 from metrics import is_valid_smiles, evaluate
 from readers import CSVReader, JSONReader, SMILESReader, SMIReader
 from utils import log_results 
@@ -41,16 +42,31 @@ datasets = {
 
 
 models = {
+    "constrained_mistral_base": {
+        "class": MistralCFGModel,
+        "model_id": "mistralai/Mistral-7B-v0.1"
+    },
+    "constrained_mistral_instruct": {
+        "class": MistralCFGModel,
+        "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
+    },
+    "constrained_mixtral": {
+        "class": MistralCFGModel,
+        "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        "args": {
+            "load_in_4bit" = True
+        }
+    },
     "mistral_base": {
-        "class": MistralInstructGenerationModel,
+        "class": MistralGenerationModel,
         "model_id": "mistralai/Mistral-7B-v0.1"
     },
     "mistral_instruct": {
-        "class": MistralInstructGenerationModel,
+        "class": MistralGenerationModel,
         "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
     },
     "mixtral": {
-        "class": MistralInstructGenerationModel,
+        "class": MistralGenerationModel,
         "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
         "args": {
             "load_in_4bit" = True
