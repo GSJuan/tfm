@@ -38,7 +38,7 @@ class MistralCFGModel(BaseCFGModel):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p, repetition_penalty=1.9, num_return_sequences=1)
         
         self.model_type = "base"
-        if model_id.find("Instruct") == -1:
+        if model_id.find("Instruct") != -1:
             self.model_type = "instruct"  
         
         self.tokenizer.pad_token = self.tokenizer.eos_token

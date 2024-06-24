@@ -1,5 +1,5 @@
 from models import Nach0GenerationModel, MistralGenerationModel
-from gc_models import MistralConstrainedModel
+#from syncode_models import MistralConstrainedModel
 from cfg_models import MistralCFGModel
 from metrics import is_valid_smiles, evaluate
 from readers import CSVReader, JSONReader, SMILESReader, SMIReader
@@ -54,7 +54,7 @@ models = {
         "class": MistralCFGModel,
         "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
         "args": {
-            "load_in_4bit" = True
+            "load_in_4bit": True
         }
     },
     "mistral_base": {
@@ -69,7 +69,7 @@ models = {
         "class": MistralGenerationModel,
         "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
         "args": {
-            "load_in_4bit" = True
+            "load_in_4bit": True
         }
     },
     "nach0": {
