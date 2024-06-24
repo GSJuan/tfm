@@ -56,9 +56,8 @@ class MistralCFGModel(BaseCFGModel):
         first_rule = grammar_str.split("\n")[0]
         print(f"{grammar_name}: {first_rule}")
 
-        grammar = IncrementalGrammarConstraint(grammar_str, "root", self.tokenizer)
-        self.grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
-
+        self.grammar = IncrementalGrammarConstraint(grammar_str, "root", self.tokenizer)
+        
     def generate_text(self, prompt):
         try: 
             full_prompt = prompt
@@ -71,7 +70,8 @@ class MistralCFGModel(BaseCFGModel):
                 full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             
             input_ids = self.tokenizer([full_prompt], add_special_tokens=False, return_tensors="pt", padding=True).to(self.model.device)
-            
+            self.grammar_processor = GrammarConstrainedLogitsProcessor(self.grammar)
+
             with torch.no_grad():
                 constrained_output = self.model.generate(
                     **input_ids, 
