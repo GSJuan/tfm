@@ -63,7 +63,7 @@ class MistralCFGModel(BaseCFGModel):
             messages = [
                 {
                     "role": "user", 
-                    "content": "You are a helpful chemical assistant. Yor task is to generate a valid SMILES string that represents a molecule based on the given information, if any is given.\n" + prompt
+                    "content": "You are a helpful chemical assistant that only answers a valid SMILES string that represents a molecule based on the given information, if any is given.\n" + prompt
                 }
             ]
             
@@ -74,15 +74,14 @@ class MistralCFGModel(BaseCFGModel):
             with torch.no_grad():
                 unconstrained_output = self.model.generate(
                     **input_ids, 
-                    do_sample=self.do_sample,
-                    max_new_tokens = self.max_new_tokens,
-                    repetition_penalty=self.repetition_penalty,
-                    num_return_sequences=self.num_return_sequences)
+                    do_sample=True,
+                    temperature=1,
+                    max_new_tokens = self.max_new_tokens)
 
                 constrained_output = self.model.generate(
                     **input_ids, 
                     max_new_tokens = self.max_new_tokens,
-                    do_sample=self.do_sample,
+                    do_sample=False,
                     logits_processor=[self.grammar_processor],
                     repetition_penalty=self.repetition_penalty,
                     num_return_sequences=self.num_return_sequences)

@@ -1,4 +1,4 @@
-from models import Nach0GenerationModel, MixtralGenerationModel, MistralGenerationModel
+from models import Nach0GenerationModel, MistralInstructGenerationModel
 from gc_models import MistralConstrainedModel
 from metrics import is_valid_smiles, evaluate
 from readers import CSVReader, JSONReader, SMILESReader, SMIReader
@@ -41,13 +41,20 @@ datasets = {
 
 
 models = {
-    "mistral": {
-        "class": MistralGenerationModel,
+    "mistral_base": {
+        "class": MistralInstructGenerationModel,
+        "model_id": "mistralai/Mistral-7B-v0.1"
+    },
+    "mistral_instruct": {
+        "class": MistralInstructGenerationModel,
         "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
     },
     "mixtral": {
-        "class": MixtralGenerationModel,
-        "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1"
+        "class": MistralInstructGenerationModel,
+        "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        "args": {
+            "load_in_4bit" = True
+        }
     },
     "nach0": {
         "class": Nach0GenerationModel,
@@ -106,7 +113,11 @@ for model_name, model_config in models.items():
 
     model_class = model_config["class"]
     model_id = model_config["model_id"]
-    model = model_class(model_id)
+    
+    if "args" in model_config:
+        model = model_class(model_id, **model_config["args"])
+    else:
+        model = model_class(model_id)
     
     for dataset_name, dataset in datasets.items():
         reader_class = dataset["reader"]

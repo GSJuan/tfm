@@ -23,21 +23,28 @@ class BaseGenerationModel:
         raise NotImplementedError("Subclasses should implement this method")
 
             
-class MistralGenerationModel(BaseGenerationModel):
+class MistralInstructGenerationModel(BaseGenerationModel):
    
-    def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=50, top_p=0.7):
+    def __init__(self, model_id, load_in_4bit=False, max_new_tokens=1024, do_sample=True, temperature=1, top_k=50, top_p=0.7):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
         
-        self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
+        self.model_type = "base"
+        if model_id.find("Instruct") == -1:
+            self.model_type = "instruct"            
+        
+        self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto", load_in_4bit = load_in_4bit)
         
     def generate_text(self, prompt):
         try:
-            messages = [
-                {
-                    "role": "user", 
-                    "content": "You are a helpful chemical assistant. Yor task is to generate a valid SMILES string that represents a molecule based on the given information. Don't give any additional explanations when answering, just the plain SMILES string. \n" + prompt}
-            ]
-            full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            
+            full_prompt = prompt
+            if self.model_type == "instruct".
+                messages = [
+                    {
+                        "role": "user", 
+                        "content": "You are a helpful chemical assistant that only answers a valid SMILES string that represents a molecule based on the given information, if any is given.\n" + prompt}
+                ]
+                full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
                         
             inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
             with torch.no_grad():
@@ -47,28 +54,6 @@ class MistralGenerationModel(BaseGenerationModel):
         except Exception as e:
             print(e)
             
-            
-class MixtralGenerationModel(BaseGenerationModel):
-    def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=50, top_p=0.7):
-        super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
-        self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto", load_in_4bit=True)
-
-    def generate_text(self, prompt):
-        try:
-            messages = [
-                {
-                    "role": "user", 
-                    "content": "You are a helpful chemical assistant. Yor task is to generate a valid SMILES string that represents a molecule based on the given information. Don't give any additional explanations when answering, just the plain SMILES string. \n" + prompt}
-            ]
-            full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-            inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
-            with torch.no_grad():
-                outputs = self.model.generate(**inputs, max_new_tokens=self.max_new_tokens, do_sample=self.do_sample, use_cache=True)
-            #generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            generated_text = self.tokenizer.decode(outputs[0][len(inputs["input_ids"][0]):], skip_special_tokens=True)
-            return generated_text.splitlines()[0]
-        except Exception as e:
-            print(e)
 
 class Nach0GenerationModel(BaseGenerationModel):
     def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=100, top_p=0.95):
@@ -112,12 +97,13 @@ class Nach0GenerationModel(BaseGenerationModel):
             
 
 if __name__ == "__main__":
-    model = GenerationModel(
+    model = MistralInstructGenerationModel(
         model_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
-        temperature=0.0,
+        load_in_4bit=True,
+        temperature=1,
         max_new_tokens=356,
-        do_sample=False,
+        do_sample=True,
     )
-    messages = "Explain what a Mixture of Experts is in less than 100 words."
+    messages = "Give me a simple SMILES molecule:"
     out = model.generate_text(messages)
     print(out)
