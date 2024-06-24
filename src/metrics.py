@@ -4,6 +4,7 @@ import pandas as pd
 from scipy.stats import ttest_ind
 from io import StringIO
 import sys
+from utils import clean_error_message
 from rdkit.rdBase import WrapLogs
 WrapLogs() #https://www.rdkit.org/docs/source/rdkit.rdBase.html
 
@@ -14,26 +15,29 @@ def is_valid_smiles(smiles):
     """
     
     validity = {
-        "syntactic": False,
-        "semantic": False,
+        "syntactically_valid": False,
+        "semantically_valid": False,
         "error": ""
     }
-    smiles="N=N=N"
+    
+    #Syntatically valid yet semantically invalid smiles="N=N=N"
+    #Perfectly valid smiles = "CC(=O)O"
+    
     sio = sys.stderr = StringIO()
     m = Chem.MolFromSmiles(smiles,sanitize=False) #https://www.rdkit.org/docs/source/rdkit.Chem.rdmolfiles.html
     if m is None:
-        validity["error"] = sio.getvalue()
+        validity["error"] = clean_error_message(sio.getvalue())
         return validity
     
-    validity["syntactic"] = True
-    print("hi!")
+    validity["syntactically_valid"] = True
+
     try:
         Chem.SanitizeMol(m, catchErrors=False)  #https://www.rdkit.org/docs/source/rdkit.Chem.rdmolops.html#rdkit.Chem.rdmolops.SanitizeMol
     except Exception as e:
-        validity["error"] = e
+        validity["error"] = clean_error_message(e)
         return validity
     
-    validity["semantic"] = True
+    validity["semantically_valid"] = True
     return validity
 
 

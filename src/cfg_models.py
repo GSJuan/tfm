@@ -10,7 +10,6 @@ from metrics import is_valid_smiles
 
 from utils import get_project_root
 
-
 class BaseCFGModel:
     
     def __init__(self, model_id, tokenizer_id=None, temperature=0.0, max_new_tokens=50, do_sample=False, top_k=50, top_p=0.7, repetition_penalty=1.9, num_return_sequences=1):
@@ -70,8 +69,6 @@ class MistralCFGModel(BaseCFGModel):
             
             full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             
-            # full_prompt=prompt
-            
             input_ids = self.tokenizer([full_prompt], add_special_tokens=False, return_tensors="pt", padding=True).to(self.model.device)
             
             with torch.no_grad():
@@ -92,6 +89,9 @@ class MistralCFGModel(BaseCFGModel):
             
             string_grammar = StringRecognizer(self.parsed_grammar.grammar_encoding, self.parsed_grammar.symbol_table["root"])
             
+            prompt_length = len(self.tokenizer.decode(input_ids['input_ids'][0], skip_special_tokens=True))
+
+            
             res = self.tokenizer.decode(
                 constrained_output[0],
                 skip_special_tokens=True,
@@ -108,13 +108,13 @@ class MistralCFGModel(BaseCFGModel):
                 print(gen_type + ":")
                 print(generation)
                 
-                responses[gen_type] = generation[len(full_prompt):]
+                responses[gen_type] = generation[prompt_length:]
                 
                 assert string_grammar._accept_prefix(
-                    res[len(full_prompt):]
-                ), f"The generated prefix does not match the grammar: {string_grammar._accept_prefix(res[len(full_prompt):])}"
+                    res[prompt_length:]
+                ), f"The generated prefix does not match the grammar: {string_grammar._accept_prefix(res[prompt_length:])}"
                 print(
-                    f"The generation matches the grammar: {string_grammar._accept_string(generation[len(full_prompt):])}"
+                    f"The generation matches the grammar: {string_grammar._accept_string(generation[prompt_length:])}"
                 )
 
             return responses
