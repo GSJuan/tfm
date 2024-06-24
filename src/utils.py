@@ -13,23 +13,24 @@ def clean_error_message(error_message):
 def get_project_root() -> Path:
     return Path(__file__).parent.parent
 
-def log_results(file, dataset_name, model_name, strategy, prompt_template, num_generations, input_samples, generated_response, validity, novelty, uniqueness, drug_likeness, sample_size=None):
+def log_results(file, dataset_name, model_name, strategy, prompt_template, num_generations, input_samples, generated_response, validity_metrics, novelty, uniqueness, drug_likeness, sample_size=None):
     """Log the results."""
     result = {
         "dataset": dataset_name,
         "model": model_name,
         "prompting_strategy": strategy,
         "prompt_template": prompt_template,
-        "num_generations": num_generations,
         "input_samples": input_samples,
-        "generated_response": generated_response,
-        "validity": validity,
+        "num_generations": num_generations,
+        "generated_responses": generated_response,
         "novelty": novelty,
         "uniqueness": uniqueness,
         "drug_likeness": drug_likeness
     }
     if sample_size is not None:
-        result["sample_size"] = sample_size
+        result["few_shot_sample_size"] = sample_size
+        
+    result = {**result, **validity_metrics}
         
     df = pd.DataFrame([result])
     df.to_csv(file, mode='a', header=not os.path.exists(file), index=False)

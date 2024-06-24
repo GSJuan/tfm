@@ -2,14 +2,7 @@ import re
 import time
 import torch
 from rdkit import Chem
-
 from transformers import AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoTokenizer
-
-from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
-from transformers_cfg.recognizer import StringRecognizer
-from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
-from transformers_cfg.parser import parse_ebnf
-
 from metrics import is_valid_smiles
 from utils import get_project_root
 
@@ -40,7 +33,7 @@ class MistralGenerationModel(BaseGenerationModel):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
         
         self.model_type = "base"
-        if model_id.find("Instruct") == -1:
+        if model_id.find("Instruct") != -1:
             self.model_type = "instruct"            
         
         self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto", load_in_4bit = load_in_4bit)
@@ -58,9 +51,9 @@ class MistralGenerationModel(BaseGenerationModel):
                         
             inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
             with torch.no_grad():
-                outputs   = self.model.generate(**inputs, max_new_tokens = self.max_new_tokens, do_sample=self.do_sample, use_cache=True)
+                outputs = self.model.generate(**inputs, max_new_tokens = self.max_new_tokens, do_sample=self.do_sample, use_cache=True)
             generated_text = self.tokenizer.decode(outputs[0][len(inputs["input_ids"][0]):], skip_special_tokens=True)
-            return generated_text.splitlines()[0]
+            return generated_text
         except Exception as e:
             print(e)
             
@@ -107,7 +100,7 @@ class Nach0GenerationModel(BaseGenerationModel):
             
 
 if __name__ == "__main__":
-    model = MistralInstructGenerationModel(
+    model = MistralGenerationModel(
         model_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
         load_in_4bit=True,
         temperature=1,

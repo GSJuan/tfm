@@ -53,15 +53,32 @@ def calculate_properties(smiles):
         'num_h_bond_acceptors': Descriptors.NumHAcceptors(mol),
         'num_rotatable_bonds': Descriptors.NumRotatableBonds(mol),
         'topological_polar_surface_area': Descriptors.TPSA(mol),
-        'qed': QED.qed(mol)
+        'qed': QED.qed(mol) #https://www.rdkit.org/new_docs/source/rdkit.Chem.QED.html#
     }
     return properties
 
+
 def calculate_validity(smiles_list):
     """Calculate the validity percentage of a list of SMILES strings."""
-    valid_smiles = [s for s in smiles_list if is_valid_smiles(s)]
-    validity = len(valid_smiles) / len(smiles_list)
-    return validity, valid_smiles
+    results = {
+        "total": len(smiles_list),
+        "syntactically_valid": 0,
+        "semantically_valid": 0,
+        "valid_smiles": [],
+    }
+
+    for smiles in smiles_list:
+        validity = is_valid_smiles(smiles)
+        if validity["syntactically_valid"]:
+            results["syntactically_valid"] += 1
+        if validity["semantically_valid"]:
+            results["semantically_valid"] += 1
+            results["valid_smiles"].append(smiles)
+
+    results["syntactically_valid_percentage"] = results["syntactically_valid"] / results["total"] * 100
+    results["semantically_valid_percentage"] = results["semantically_valid"] / results["total"] * 100
+
+    return results
 
 def calculate_novelty(generated_smiles, reference_smiles):
     """Calculate the novelty percentage of generated SMILES strings."""
@@ -94,7 +111,8 @@ def evaluate(generated_smiles_list, smiles_list = None):
     """Calculate metrics."""
     
     # Validate molecules
-    validity, valid_generated_smiles = calculate_validity(generated_smiles_list)
+    validity_metrics = calculate_validity(generated_smiles_list)
+    valid_generated_smiles = validity_metrics["valid_smiles"]
     
     uniqueness = None
     drug_likeness = None
@@ -109,7 +127,7 @@ def evaluate(generated_smiles_list, smiles_list = None):
             novelty = calculate_novelty(valid_generated_smiles, smiles_list)
     else: print("Not a single valid molecule generated!!")
     
-    return validity, novelty, uniqueness, drug_likeness
+    return validity_metrics, novelty, uniqueness, drug_likeness
 
 def main():
     # Example data

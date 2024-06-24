@@ -76,20 +76,7 @@ models = {
         "class": Nach0GenerationModel,
         "model_id": "insilicomedicine/nach0_base"
     }
-}
-
-"""
-models = {
-    "ConstrainedMistral": {
-       "class": MistralConstrainednModel,
-        "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
-    },
-    "ConstrainedMistral": {
-       "class": MistralConstrainednModel,
-        "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
-    },
-}
-"""
+} 
 
 # Define prompting strategies
 prompting_strategies = {
@@ -122,7 +109,7 @@ num_generations = 3
 
 # Save results to CSV with a timestamped filename
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-output_file = f"constrained_molecule_generation_results_{timestamp}.csv"
+output_file = f"final_molecule_generation_results_{timestamp}.csv"
 
 # Main loop to process datasets, models, and prompting strategies
 for model_name, model_config in models.items():
@@ -151,8 +138,8 @@ for model_name, model_config in models.items():
                     for _ in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy})"):
                         generated_smiles = model.generate_text(prompt)
                         generated_smiles_list.append(generated_smiles)
-                    validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list)
-                    log_results(output_file, dataset_name, model_name, strategy, prompt, num_generations, input_samples, generated_smiles_list, validity, novelty, uniqueness, drug_likeness)
+                    validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list)
+                    log_results(output_file, dataset_name, model_name, strategy, prompt, num_generations, input_samples, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness)
             
             elif strategy == "one_shot":
                 for prompt_template in prompt_templates:
@@ -167,8 +154,8 @@ for model_name, model_config in models.items():
                         generated_smiles = model.generate_text(prompt)
                         generated_smiles_list.append(generated_smiles)
                         
-                    validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, sampled_smiles_list)
-                    log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness)
+                    validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, sampled_smiles_list)
+                    log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness)
                     
             elif strategy == "few_shot":
                 for prompt_template in prompt_templates:
@@ -187,8 +174,8 @@ for model_name, model_config in models.items():
                             generated_smiles = model.generate_text(prompt)
                             generated_smiles_list.append(generated_smiles)
                             
-                        validity, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, subset_smiles)
-                        log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity, novelty, uniqueness, drug_likeness, sample_size)
+                        validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, subset_smiles)
+                        log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness, sample_size)
     del model
     torch.cuda.empty_cache()
 
