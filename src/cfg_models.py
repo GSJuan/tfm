@@ -34,7 +34,7 @@ class BaseCFGModel:
         
 class MistralCFGModel(BaseCFGModel):
    
-    def __init__(self, model_id, temperature=1, max_new_tokens=1024, do_sample=True, top_k=50, top_p=0.7, repetition_penalty=1.9, num_return_sequences=1):
+    def __init__(self, model_id, temperature=1, max_new_tokens=30, do_sample=False, top_k=50, top_p=0.7, repetition_penalty=1.9, num_return_sequences=1):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p, repetition_penalty=1.9, num_return_sequences=1)
         
         self.model_type = "base"
@@ -50,13 +50,13 @@ class MistralCFGModel(BaseCFGModel):
         
         grammar_file = (root_path / 'src/grammars' / f"{grammar_name}.ebnf").resolve()
         with grammar_file.open() as file:
-            grammar_str = file.read()
+            self.grammar_str = file.read()
 
-        self.parsed_grammar = parse_ebnf(grammar_str)
-        first_rule = grammar_str.split("\n")[0]
-        print(f"{grammar_name}: {first_rule}")
+        self.parsed_grammar = parse_ebnf(self.grammar_str)
+        first_rule = self.grammar_str.split("\n")[0]
+        #print(f"{grammar_name}: {first_rule}")
 
-        self.grammar = IncrementalGrammarConstraint(grammar_str, "root", self.tokenizer)
+        
         
     def generate_text(self, prompt):
         try: 
@@ -69,7 +69,9 @@ class MistralCFGModel(BaseCFGModel):
                 ]
                 full_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             
-            input_ids = self.tokenizer([full_prompt], add_special_tokens=False, return_tensors="pt", padding=True).to(self.model.device)
+            input_ids = self.tokenizer(full_prompt, add_special_tokens=False, return_tensors="pt", padding=True).to(self.model.device)
+            
+            self.grammar = IncrementalGrammarConstraint(self.grammar_str, "root", self.tokenizer)
             self.grammar_processor = GrammarConstrainedLogitsProcessor(self.grammar)
 
             with torch.no_grad():

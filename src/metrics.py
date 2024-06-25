@@ -5,8 +5,9 @@ from scipy.stats import ttest_ind
 from io import StringIO
 import sys
 from utils import clean_error_message
-from rdkit.rdBase import WrapLogs
-WrapLogs() #https://www.rdkit.org/docs/source/rdkit.rdBase.html
+from rdkit.rdBase import WrapLogs, BlockLogs
+#WrapLogs() #https://www.rdkit.org/docs/source/rdkit.rdBase.html
+BlockLogs()
 
 def is_valid_smiles(smiles):
     """Check if a SMILES string is valid.
@@ -20,15 +21,17 @@ def is_valid_smiles(smiles):
         "error": ""
     }
     
+        
     #Syntatically valid yet semantically invalid smiles="N=N=N"
     #Perfectly valid smiles = "CC(=O)O"
-    
+
     sio = sys.stderr = StringIO()
     m = Chem.MolFromSmiles(smiles,sanitize=False) #https://www.rdkit.org/docs/source/rdkit.Chem.rdmolfiles.html
+
     if m is None:
         validity["error"] = clean_error_message(sio.getvalue())
         return validity
-    
+
     validity["syntactically_valid"] = True
 
     try:
@@ -36,10 +39,10 @@ def is_valid_smiles(smiles):
     except Exception as e:
         validity["error"] = clean_error_message(e)
         return validity
-    
+
     validity["semantically_valid"] = True
     return validity
-
+    
 
 def calculate_properties(smiles):
     """Calculate chemical properties of a molecule given its SMILES string."""
@@ -60,6 +63,7 @@ def calculate_properties(smiles):
 
 def calculate_validity(smiles_list):
     """Calculate the validity percentage of a list of SMILES strings."""
+
     results = {
         "total": len(smiles_list),
         "syntactically_valid": 0,
@@ -79,6 +83,8 @@ def calculate_validity(smiles_list):
     results["semantically_valid_percentage"] = results["semantically_valid"] / results["total"] * 100
 
     return results
+
+        
 
 def calculate_novelty(generated_smiles, reference_smiles):
     """Calculate the novelty percentage of generated SMILES strings."""
@@ -113,11 +119,11 @@ def evaluate(generated_smiles_list, smiles_list = None):
     # Validate molecules
     validity_metrics = calculate_validity(generated_smiles_list)
     valid_generated_smiles = validity_metrics["valid_smiles"]
-    
+
     uniqueness = None
     drug_likeness = None
     novelty= None
-    
+
     # Calculate metrics
     if len(valid_generated_smiles) > 0:
         uniqueness = calculate_uniqueness(valid_generated_smiles)
@@ -125,8 +131,8 @@ def evaluate(generated_smiles_list, smiles_list = None):
         #check if baseline has been given
         if smiles_list != None:
             novelty = calculate_novelty(valid_generated_smiles, smiles_list)
-    else: print("Not a single valid molecule generated!!")
-    
+    #else: print("Not a single valid molecule generated!!")
+
     return validity_metrics, novelty, uniqueness, drug_likeness
 
 def main():
