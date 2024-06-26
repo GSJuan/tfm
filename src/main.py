@@ -46,18 +46,22 @@ models = {
         "class": MistralGenerationModel,
         "model_id": "mistralai/Mistral-7B-v0.1"
     },
+    
     "constrained_mistral_base": {
         "class": MistralCFGModel,
         "model_id": "mistralai/Mistral-7B-v0.1"
     },
+    
     "mistral_instruct": {
         "class": MistralGenerationModel,
         "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
     },
+    
     "constrained_mistral_instruct": {
         "class": MistralCFGModel,
         "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
     },
+    
     "mixtral": {
         "class": MistralGenerationModel,
         "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -65,6 +69,7 @@ models = {
             "load_in_4bit": True
         }
     },
+    
     "constrained_mixtral": {
         "class": MistralCFGModel,
         "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -72,6 +77,7 @@ models = {
             "load_in_4bit": True
         }
     },
+    
     "nach0": {
         "class": Nach0GenerationModel,
         "model_id": "insilicomedicine/nach0_base"
@@ -120,81 +126,83 @@ ANSWER:"""
 few_shot_sample_sizes = [3, 5, 10]
 
 # Define number of SMILES to be generated for each prompt by each model
-num_generations = 3
-
+num_generations = 7
 
 # Save results to CSV with a timestamped filename
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 output_file = f"final_molecule_generation_results_{timestamp}.csv"
 
+try:
 
-# Main loop to process datasets, models, and prompting strategies
-for model_name, model_config in models.items():
+    # Main loop to process datasets, models, and prompting strategies
+    for model_name, model_config in models.items():
 
-    model_class = model_config["class"]
-    model_id = model_config["model_id"]
+        model_class = model_config["class"]
+        model_id = model_config["model_id"]
 
-    if "args" in model_config:
-        model = model_class(model_id, **model_config["args"])
-    else:
-        model = model_class(model_id)
+        if "args" in model_config:
+            model = model_class(model_id, **model_config["args"])
+        else:
+            model = model_class(model_id)
 
-    for dataset_name, dataset in datasets.items():
-        reader_class = dataset["reader"]
-        source = dataset["source"]
-        config = dataset["config"]
+        for dataset_name, dataset in datasets.items():
+            reader_class = dataset["reader"]
+            source = dataset["source"]
+            config = dataset["config"]
 
-        reader = reader_class(source, config)
-        smiles_list = reader.extract_smiles()
+            reader = reader_class(source, config)
+            smiles_list = reader.extract_smiles()
 
-        for strategy, prompt_templates in prompting_strategies.items():
-            if strategy == "zero_shot":
-                input_samples = ""
-                for prompt in prompt_templates:
-                    generated_smiles_list = []
-                    for _ in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy})"):
-                        generated_smiles = model.generate_text(prompt)
-                        generated_smiles_list.append(generated_smiles)
-                    validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list)
-                    log_results(output_file, dataset_name, model_name, strategy, prompt, num_generations, input_samples, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness)
+            for strategy, prompt_templates in prompting_strategies.items():
+                if strategy == "zero_shot":
+                    input_samples = ""
+                    for prompt in prompt_templates:
+                        generated_smiles_list = []
+                        for _ in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy})"):
+                            generated_smiles = model.generate_text(prompt)
+                            generated_smiles_list.append(generated_smiles)
+                        validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list)
+                        log_results(output_file, dataset_name, model_name, strategy, prompt, num_generations, input_samples, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness)
 
-            elif strategy == "one_shot":
-                for prompt_template in prompt_templates:
-                    generated_smiles_list = []
-                    sampled_smiles_list = []
-                    for _ in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy})"):
-                        smile = choice(smiles_list)
-                        sampled_smiles_list.append(smile)
-
-                        prompt = prompt_template.replace("[example_SMILES]", smile)
-
-                        generated_smiles = model.generate_text(prompt)
-                        generated_smiles_list.append(generated_smiles)
-
-                    validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, sampled_smiles_list)
-                    log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness)
-
-            elif strategy == "few_shot":
-                for prompt_template in prompt_templates:
-                    for sample_size in few_shot_sample_sizes: 
+                elif strategy == "one_shot":
+                    for prompt_template in prompt_templates:
                         generated_smiles_list = []
                         sampled_smiles_list = []
-                        for i in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy}, sample size {sample_size})"):
+                        for _ in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy})"):
+                            smile = choice(smiles_list)
+                            sampled_smiles_list.append(smile)
 
-                            subset_smiles = sample(smiles_list, sample_size)
-                            sampled_smiles_list.extend(subset_smiles)
-
-                            example_smiles = "\n".join(subset_smiles)
-
-                            prompt = prompt_template.replace("[example_SMILES]", example_smiles)
+                            prompt = prompt_template.replace("[example_SMILES]", smile)
 
                             generated_smiles = model.generate_text(prompt)
                             generated_smiles_list.append(generated_smiles)
 
-                        validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, subset_smiles)
-                        log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness, sample_size)
-              
-    del model
-    torch.cuda.empty_cache()
+                        validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, sampled_smiles_list)
+                        log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness)
+
+                elif strategy == "few_shot":
+                    for prompt_template in prompt_templates:
+                        for sample_size in few_shot_sample_sizes: 
+                            generated_smiles_list = []
+                            sampled_smiles_list = []
+                            for i in tqdm(range(num_generations), desc=f"Processing {dataset_name} with {model_name} ({strategy}, sample size {sample_size})"):
+
+                                subset_smiles = sample(smiles_list, sample_size)
+                                sampled_smiles_list.extend(subset_smiles)
+
+                                example_smiles = "\n".join(subset_smiles)
+
+                                prompt = prompt_template.replace("[example_SMILES]", example_smiles)
+
+                                generated_smiles = model.generate_text(prompt)
+                                generated_smiles_list.append(generated_smiles)
+
+                            validity_metrics, novelty, uniqueness, drug_likeness = evaluate(generated_smiles_list, subset_smiles)
+                            log_results(output_file, dataset_name, model_name, strategy, prompt_template, num_generations, sampled_smiles_list, generated_smiles_list, validity_metrics, novelty, uniqueness, drug_likeness, sample_size)
+
+        del model
+        torch.cuda.empty_cache()
+except Exception as e:
+    print(e)
 print(f"Results saved to {output_file}")
 

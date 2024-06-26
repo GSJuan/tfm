@@ -11,7 +11,7 @@ from utils import get_project_root
 
 class BaseCFGModel:
     
-    def __init__(self, model_id, tokenizer_id=None, temperature=0.0, max_new_tokens=50, do_sample=False, top_k=50, top_p=0.7, repetition_penalty=1.9, num_return_sequences=1):
+    def __init__(self, model_id, tokenizer_id=None, temperature=0.0, max_new_tokens=50, do_sample=False, top_k=50, top_p=0.7, repetition_penalty=1.9, num_return_sequences=1, load_in_4bit=False):
 
         self.temperature = temperature
         self.max_new_tokens = max_new_tokens
@@ -22,6 +22,7 @@ class BaseCFGModel:
         self.num_return_sequences=num_return_sequences
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"  
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_id or model_id, device_map="auto")
+        self.load_in_4bit = load_in_4bit
         
         if do_sample and temperature == 0.0:
             raise ValueError(
@@ -34,15 +35,15 @@ class BaseCFGModel:
         
 class MistralCFGModel(BaseCFGModel):
    
-    def __init__(self, model_id, temperature=1, max_new_tokens=30, do_sample=False, top_k=50, top_p=0.7, repetition_penalty=1.9, num_return_sequences=1):
-        super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p, repetition_penalty=1.9, num_return_sequences=1)
+    def __init__(self, model_id, temperature=1, max_new_tokens=30, do_sample=False, top_k=50, top_p=0.7, repetition_penalty=1.9, num_return_sequences=1, load_in_4bit=False):
+        super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty, num_return_sequences=num_return_sequences, load_in_4bit=load_in_4bit)
         
         self.model_type = "base"
         if model_id.find("Instruct") != -1:
             self.model_type = "instruct"  
         
         self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
+        self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto", load_in_4bit=self.load_in_4bit)
         
         # Load grammar
         grammar_name = "basic"
