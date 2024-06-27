@@ -41,6 +41,7 @@ datasets = {
 }
 
 
+
 models = {
     "mistral_base": {
         "class": MistralGenerationModel,
@@ -62,6 +63,11 @@ models = {
         "model_id": "mistralai/Mistral-7B-Instruct-v0.2"
     },
     
+    "nach0": {
+        "class": Nach0GenerationModel,
+        "model_id": "insilicomedicine/nach0_base"
+    },
+
     "mixtral": {
         "class": MistralGenerationModel,
         "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -76,11 +82,6 @@ models = {
         "args": {
             "load_in_4bit": True
         }
-    },
-    
-    "nach0": {
-        "class": Nach0GenerationModel,
-        "model_id": "insilicomedicine/nach0_base"
     }
 } 
 
@@ -131,7 +132,7 @@ num_generations = 7
 # Save results to CSV with a timestamped filename
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 output_file = f"final_molecule_generation_results_{timestamp}.csv"
-
+#output_file = "final.csv"
 try:
 
     # Main loop to process datasets, models, and prompting strategies

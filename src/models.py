@@ -29,7 +29,7 @@ class BaseGenerationModel:
             
 class MistralGenerationModel(BaseGenerationModel):
    
-    def __init__(self, model_id, load_in_4bit=False, max_new_tokens=1024, do_sample=True, temperature=1, top_k=50, top_p=0.7):
+    def __init__(self, model_id, load_in_4bit=False, max_new_tokens=50, do_sample=True, temperature=1, top_k=50, top_p=0.7):
         super().__init__(model_id, temperature=temperature, max_new_tokens=max_new_tokens, do_sample=do_sample, top_k=top_k, top_p=top_p)
         
         self.model_type = "base"
