@@ -75,7 +75,7 @@ models = {
             "load_in_4bit": True
         }
     },
-    
+ 
     "constrained_mixtral": {
         "class": MistralCFGModel,
         "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
